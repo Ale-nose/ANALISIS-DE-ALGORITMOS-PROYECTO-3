@@ -1,0 +1,62 @@
+# Salidas de compilacion
+*.pdf
+!assets/**/*.pdf
+
+# Artefactos de LaTeX
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.log
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.xdv
+_minted*/
+*.ppm
+
+# Artefactos de Org / Emacs
+*~
+\#*\#
+.\#*
+.org-timestamps/
+ltximg/
+
+# Binarios y objetos de C
+codigo/**/bin/
+*.o
+*.out
+*.exe
+
+# Sistema operativo
+.DS_Store
+
+bin/
+build/
+doc/
+lib/
+logs/
+password/
+*.pyc
+.DS_Store
+.vscode
+.so
+
+# CMake / Qt Creator
+build-*/
+cmake-build-*/
+CMakeLists.txt.user
+*_autogen/
+.idea/
+
+# Keep the final report
+!Proyecto 2/report/*.pdf
