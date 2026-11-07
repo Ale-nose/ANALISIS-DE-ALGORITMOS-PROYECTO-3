@@ -35,6 +35,11 @@ def random_chromosome(spec,rng):
     return values
   raise NotImplementedError("binary and permuted not yet implemented")
 
+def is_better(candidate, current, direction):
+    if direction is Direction.MAXIMIZE:
+        return candidate > current
+    return candidate < current
+
 if __name__ == "__main__":
     print("== Valid REAL chromosome ==")
     spec = ChromosomeSpec(ChromosomeType.REAL, 5, low=0.0, high=1.0)
