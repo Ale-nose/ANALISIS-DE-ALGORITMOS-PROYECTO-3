@@ -2,7 +2,7 @@ from src.engine.chromosome import Direction, is_better
 
 EPSILON = 1e-9
 
-def tournament_selection(population, fitnesses, direction, rng, k):
+def tournament_selection(population, fitnesses, direction, rng, k=3):
   if not 1 <= k <= len(population):
     raise ValueError("k must be in [1, population size]")
   indexes = rng.sample(range(len(population)), k)
@@ -12,12 +12,13 @@ def tournament_selection(population, fitnesses, direction, rng, k):
       best = i
   return population[best]
 
-def ranking_selection(population, fitnesses, direction, rng, k):
+def ranking_selection(population, fitnesses, direction, rng, k=3):
     if not 1 <= k <= len(population):
       raise ValueError("k must be in [1, population size]")
     sorted_indexes = sorted(range(len(population)), key = lambda i: fitnesses[i], reverse= direction is Direction.MAXIMIZE)
     top_k = sorted_indexes[:k]
     return population [rng.choice(top_k)]
+
 def roulette_selection(population, fitnesses, direction, rng):
   lowest = min(fitnesses)
   highest = max(fitnesses)
