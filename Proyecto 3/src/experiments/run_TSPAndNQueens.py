@@ -35,9 +35,13 @@ EVALUATION_BUDGET = 20_000
 EXP1_INSTANCE_SEED = 777
 EXP1_SIZE = {"tsp": 30, "nqueens": 30}
 EXP2_INSTANCE_BASE_SEED = 9000
+# N-Queens has no random instance: a board of size n is always the same problem.
+# Size 30 is therefore NOT used here, because Experiment 1 already uses n = 30
+# and Experiment 2 must use instances different from Experiment 1.
+# Small sizes are included so the exhaustive method finishes on at least 6 sizes.
 EXP2_SIZES = {
-  "tsp": [8, 10, 12, 14, 16, 18, 20, 30, 50, 100],
-  "nqueens": [8, 10, 12, 13, 14, 15, 16, 20, 30, 50],
+  "tsp": [6, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 30, 50, 100],
+  "nqueens": [6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 50],
 }
 
 RESULTS_DIR = "results"
@@ -164,6 +168,26 @@ def build_exp1_ofat_tasks(problem_name: str):
   return tasks
 
 
+def build_exp1_cxmut_tasks(problem_name: str):
+  """Every crossover x mutation pair with the base configuration (Figure 2)."""
+  size = EXP1_SIZE[problem_name]
+  problem = build_problem(problem_name, size, EXP1_INSTANCE_SEED)
+  instance_id = f"fixed_n{size}_s{EXP1_INSTANCE_SEED}"
+  tasks = []
+
+  for crossover_name, mutation_name in product(CROSSOVER_OPTIONS, MUTATION_OPTIONS):
+    params = dict(BASE_PARAMS)
+    params["crossover"] = crossover_name
+    params["mutation"] = mutation_name
+    config_id = f"cxmut__{crossover_name}__{mutation_name}"
+    for seed in SEEDS:
+      cfg = make_ga_config(params, seed)
+      tasks.append(
+        ga_task("exp1_cxmut", problem_name, instance_id, size, config_id, problem, cfg)
+      )
+  return tasks
+
+
 def select_top2_per_parameter(problem_name: str, direction: Direction) -> dict[str, list]:
   rows = [
     r for r in load_rows(get_csv_path(problem_name))
@@ -274,7 +298,7 @@ def main():
   parser.add_argument("--problem", choices=PROBLEMS + ["all"], default="all")
   parser.add_argument(
     "--stage",
-    choices=["exp1_ofat", "exp1_combo", "exp2", "all"],
+    choices=["exp1_ofat", "exp1_cxmut", "exp1_combo", "exp2", "all"],
     default="all",
     help="Experiment stage to run",
   )
@@ -297,6 +321,7 @@ def main():
 
   stages = [
     ("exp1_ofat", "Exp 1 (OFAT + Heatmap)", build_exp1_ofat_tasks),
+    ("exp1_cxmut", "Exp 1 (Crossover x Mutation pairs)", build_exp1_cxmut_tasks),
     ("exp1_combo", "Exp 1 (Top-2 Combinations)", build_exp1_combination_tasks),
     ("exp2", "Exp 2 (GA vs Exhaustive vs DP)", build_exp2_tasks),
   ]
@@ -319,3 +344,4 @@ def main():
 
 if __name__ == "__main__":
   main()
+  
