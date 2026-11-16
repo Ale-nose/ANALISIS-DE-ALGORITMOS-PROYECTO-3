@@ -1,0 +1,21 @@
+experiment,problem,instance,size,config_id,method,seed,status,value,time_seconds,peak_memory_kb,evaluations,generations,solution,message
+exp2,rod_cutting,scale_n10_s9010,10,-,exhaustive,0,ok,28.0,0.00033572200004527986,188,,,,
+exp2,rod_cutting,scale_n15_s9015,15,-,exhaustive,0,ok,42.0,0.00960627199992814,188,,,,
+exp2,rod_cutting,scale_n20_s9020,20,-,exhaustive,0,ok,60.0,0.32567436099998304,188,,,,
+exp2,rod_cutting,scale_n24_s9024,24,-,exhaustive,0,ok,67.0,4.979387573999929,188,,,,
+exp2,rod_cutting,scale_n26_s9026,26,-,exhaustive,0,ok,78.0,19.885430397999926,188,,,,
+exp2,rod_cutting,scale_n28_s9028,28,-,exhaustive,0,ok,83.0,79.28071699700013,188,,,,
+exp2,rod_cutting,scale_n30_s9030,30,-,exhaustive,0,ok,78.0,319.832366094,168,,,,
+exp2,rod_cutting,scale_n31_s9031,31,-,exhaustive,0,timeout,,600,,,,,no result after 600 s
+exp2,rod_cutting,scale_n32_s9032,32,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n33_s9033,33,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n34_s9034,34,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n100_s9100,100,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n1000_s10000,1000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n4000_s13000,4000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n16000_s25000,16000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n32000_s41000,32000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n64000_s73000,64000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n90000_s99000,90000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n128000_s137000,128000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
+exp2,rod_cutting,scale_n181000_s190000,181000,-,exhaustive,0,skipped,,,,,,,limit already reached at size 31
