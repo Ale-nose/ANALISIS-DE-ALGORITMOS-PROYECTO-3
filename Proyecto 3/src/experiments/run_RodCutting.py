@@ -1,6 +1,8 @@
 """Automated experiment suite for Rod Cutting (real-valued chromosome)."""
 
 import argparse
+import csv
+import glob
 import os
 import random
 import statistics
@@ -22,6 +24,7 @@ from src.engine.selection import (
   tournament_selection,
 )
 from src.experiments.runner import (
+  CSV_COLUMNS,
   DEFAULT_MEMORY_LIMIT_MB,
   DEFAULT_TIME_LIMIT_SECONDS,
   METHOD_DP,
@@ -30,6 +33,7 @@ from src.experiments.runner import (
   exact_task,
   ga_task,
   load_rows,
+  make_key,
   run_tasks,
 )
 from src.problems.rod_cutting import RodCutting, generate_prices
@@ -112,8 +116,9 @@ HEATMAP_POPULATIONS = [20, 50, 100, 200, 400]
 HEATMAP_MUTATION_RATES = [0.05, 0.1, 0.2, 0.4, 0.8]
 
 
-def get_csv_path(problem_name: str) -> str:
-  return os.path.join(RESULTS_DIR, f"{problem_name}_results.csv")
+def get_csv_path(problem_name: str, part: str | None = None) -> str:
+  suffix = f"_{part}" if part else ""
+  return os.path.join(RESULTS_DIR, f"{problem_name}_results{suffix}.csv")
 
 
 def get_history_dir(problem_name: str) -> str:
@@ -289,30 +294,59 @@ def exp2_instances():
     yield size, f"scale_n{size}_s{inst_seed}", build_problem(size, inst_seed)
 
 
-def build_exp2_exact_tasks(problem_name: str):
+def build_exp2_exact_tasks(problem_name: str, methods=(METHOD_EXHAUSTIVE, METHOD_DP)):
   tasks = []
   for size, instance_id, problem in exp2_instances():
-    tasks.append(exact_task("exp2", problem_name, instance_id, size, problem, METHOD_EXHAUSTIVE))
-    tasks.append(exact_task("exp2", problem_name, instance_id, size, problem, METHOD_DP))
+    for method in methods:
+      tasks.append(exact_task("exp2", problem_name, instance_id, size, problem, method))
   return tasks
 
 
-def build_exp2_ga_tasks(problem_name: str):
+def build_exp2_ga_tasks(problem_name: str, seeds=tuple(SEEDS)):
   best_cid, best_params = find_best_combo_params(problem_name, Direction.MAXIMIZE)
   print(f"Best configuration: {best_cid}")
   tasks = []
   for size, instance_id, problem in exp2_instances():
-    for seed in SEEDS:
+    for seed in seeds:
       cfg = make_ga_config(best_params, seed)
       tasks.append(ga_task("exp2", problem_name, instance_id, size, best_cid, problem, cfg))
   return tasks
+
+
+def merge_parts(problem_name: str) -> None:
+  """Join results/<problem>_results_*.csv into results/<problem>_results.csv."""
+  main_path = get_csv_path(problem_name)
+  part_paths = sorted(glob.glob(get_csv_path(problem_name, "*")))
+  if not part_paths:
+    print("No part files found; nothing to merge.")
+    return
+
+  merged = {}
+  for path in [main_path, *part_paths]:
+    for row in load_rows(path):
+      key = make_key(row)
+      if key in merged and merged[key] != row:
+        if merged[key]["value"] != row["value"] or merged[key]["status"] != row["status"]:
+          raise SystemExit(f"Conflicting results for {key} in {path}")
+      merged.setdefault(key, row)
+    print(f"  {path}: read")
+
+  temporary = f"{main_path}.tmp"
+  with open(temporary, "w", newline="") as file:
+    writer = csv.DictWriter(file, fieldnames=CSV_COLUMNS)
+    writer.writeheader()
+    writer.writerows(merged.values())
+    file.flush()
+    os.fsync(file.fileno())
+  os.replace(temporary, main_path)
+  print(f"Merged {len(merged)} runs into {main_path}")
 
 
 def main():
   parser = argparse.ArgumentParser(description="Run the Rod Cutting GA experiments.")
   parser.add_argument(
     "--stage",
-    choices=["exp1_ofat", "exp1_cxmut", "exp1_combo", "exp2_exact", "exp2_ga", "all"],
+    choices=["exp1_ofat", "exp1_cxmut", "exp1_combo", "exp2_exact", "exp2_ga", "all", "merge"],
     default="all",
     help="Experiment stage to run",
   )
@@ -335,16 +369,54 @@ def main():
     default=DEFAULT_GA_TIME_LIMIT_SECONDS,
     help=f"Time limit in seconds per GA run (default: {DEFAULT_GA_TIME_LIMIT_SECONDS})",
   )
+  parser.add_argument(
+    "--part",
+    help="Experiment 2 only: write to results/rod_cutting_results_<part>.csv (one per machine)",
+  )
+  parser.add_argument(
+    "--method",
+    choices=[METHOD_EXHAUSTIVE, METHOD_DP],
+    help="exp2_exact only: run a single exact method (default: both)",
+  )
+  parser.add_argument(
+    "--seed",
+    type=int,
+    choices=SEEDS,
+    help="exp2_ga only: run a single GA seed (default: all seeds)",
+  )
   args = parser.parse_args()
 
-  csv_path = get_csv_path(PROBLEM)
+  if args.method and args.stage != "exp2_exact":
+    parser.error("--method can only be used with --stage exp2_exact")
+  if args.seed is not None and args.stage != "exp2_ga":
+    parser.error("--seed can only be used with --stage exp2_ga")
+  if args.part and args.stage not in ("exp2_exact", "exp2_ga"):
+    parser.error("--part can only be used with --stage exp2_exact or exp2_ga")
+
+  if args.stage == "merge":
+    merge_parts(PROBLEM)
+    return
+
+  csv_path = get_csv_path(PROBLEM, args.part)
   history_dir = get_history_dir(PROBLEM)
+  methods = (args.method,) if args.method else (METHOD_EXHAUSTIVE, METHOD_DP)
+  seeds = (args.seed,) if args.seed is not None else tuple(SEEDS)
   stages = [
     ("exp1_ofat", "Exp 1 (OFAT + Heatmap)", build_exp1_ofat_tasks, args.ga_time_limit),
     ("exp1_cxmut", "Exp 1 (Crossover x Sigma pairs)", build_exp1_cxmut_tasks, args.ga_time_limit),
     ("exp1_combo", "Exp 1 (Top-2 Combinations)", build_exp1_combination_tasks, args.ga_time_limit),
-    ("exp2_exact", "Exp 2 (Exhaustive and DP)", build_exp2_exact_tasks, args.time_limit),
-    ("exp2_ga", "Exp 2 (GA with the best configuration)", build_exp2_ga_tasks, args.ga_time_limit),
+    (
+      "exp2_exact",
+      "Exp 2 (Exhaustive and DP)",
+      partial(build_exp2_exact_tasks, methods=methods),
+      args.time_limit,
+    ),
+    (
+      "exp2_ga",
+      "Exp 2 (GA with the best configuration)",
+      partial(build_exp2_ga_tasks, seeds=seeds),
+      args.ga_time_limit,
+    ),
   ]
 
   for stage_name, title, build, time_limit in stages:
