@@ -59,6 +59,10 @@ MAXIMIZE_KEYWORDS = ("knapsack", "rod")
 # size used in Experiment 1 must not appear in Experiment 2 (different instances)
 INSTANCE_FREE_PROBLEMS = {"nqueens"}
 
+# Problems whose Experiment 2 values grow by orders of magnitude with the size (the
+# total price grows with the rod length), so Figure 4 draws quality on a log axis
+LOG_QUALITY_PROBLEMS = {"rod_cutting"}
+
 # A size axis spanning more than this ratio between its largest and smallest
 # size is drawn in logarithmic scale
 LOG_AXIS_RATIO = 8
@@ -68,7 +72,10 @@ LOG_AXIS_RATIO = 8
 EARLY_FRACTION = 0.05
 EARLY_SHARE = 0.9
 # Round values used as x-axis ticks on the logarithmic size axis.
-SIZE_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000]
+SIZE_TICKS = [
+  1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000,
+  10000, 20000, 30000, 50000, 100000, 200000,
+]
 
 # Display texts shown in the figures and tables. The keys are the
 # problem names used in the CSV files
@@ -107,6 +114,9 @@ CROSSOVER_NAMES = {
 MUTATION_NAMES = {
   "bit_flip": "Bit flip",
   "gaussian": "Gaussian",
+  "gaussian_s0.05": "σ=0.05",
+  "gaussian_s0.1": "σ=0.1",
+  "gaussian_s0.2": "σ=0.2",
   "swap": "Swap",
   "inversion": "Inversion",
 }
@@ -273,9 +283,11 @@ def apply_size_axis(axes, sizes: list[int]) -> None:
 
   # Ticks: the smallest size, the round values in between and the largest size.
   ticks = []
+  # Minimum ratio between neighbouring ticks; a very wide range only gets powers of ten
+  spacing = 1.9 if high / low <= 1000 else 9.0
 
   for tick in [low] + [t for t in SIZE_TICKS if low < t < high] + [high]:
-    if not ticks or tick / ticks[-1] >= 1.9:  # skip ticks that would overlap
+    if not ticks or tick / ticks[-1] >= spacing:  # skip ticks that would overlap
       ticks.append(tick)
 
   if len(ticks) > 1 and high / ticks[-1] > 1.0:
@@ -445,6 +457,12 @@ def figure_operators(problem: str, rows: list[dict], out_dir: str):
           groups.append((label, pair_groups[config_id]))
 
     subtitle = "crossover and mutation"
+    if any("__gaussian_s" in config_id for config_id in pair_groups):
+      subtitle = "crossover and gaussian mutation sigma"
+
+    if len(groups) > 6:
+      # Many pairs (rod cutting: 4 crossovers x 3 gaussian sigmas): two-line labels so they do not overlap
+      groups = [(label.replace(" + ", "\n"), values) for label, values in groups]
   else:
     ofat_groups = group_values(ga_ok_rows(rows, "exp1_ofat"))
 
@@ -460,7 +478,7 @@ def figure_operators(problem: str, rows: list[dict], out_dir: str):
     print("  [skip] Figure 2: no crossover data found")
     return None
 
-  fig, ax = plt.subplots(figsize=(max(5.5, 1.5 * len(groups) + 2), 4.4))
+  fig, ax = plt.subplots(figsize=(min(15, max(5.5, 1.5 * len(groups) + 2)), 4.4))
   positions = np.arange(len(groups))
   stats = [mean_std(values) for _, values in groups]
   means = [mean for mean, _ in stats]
@@ -677,17 +695,20 @@ def figure_exact_vs_ga(problem: str, rows: list[dict], out_dir: str, time_limit:
     return None
 
   fig, (ax_quality, ax_time) = plt.subplots(1, 2, figsize=(11, 4.4))
-  sizes = draw_methods(ax_quality, data, "value")
+  log_quality = problem in LOG_QUALITY_PROBLEMS
+  sizes = draw_methods(ax_quality, data, "value", positive_only=log_quality, log=log_quality)
   # Time spans many orders of magnitude, so its y axis is logarithmic
   draw_methods(ax_time, data, "time_seconds", positive_only=True, log=True)
   ax_time.set_yscale("log")
-  ax_time.axhline(time_limit, color=INK_MUTED, linestyle="--", linewidth=1, label=f"Limit: {time_limit / 60:g} min")
+  ax_time.axhline(time_limit, color=INK_MUTED, linestyle="--", linewidth=1, label=f"Exact-method limit: {time_limit / 60:g} min")
   draw_stops([ax_quality, ax_time], stop_points(data))
   apply_size_axis([ax_quality, ax_time], sizes)
   ax_quality.margins(y=0.12)
 
+  if log_quality:
+    ax_quality.set_yscale("log")
   # Start at zero when no value is negative (otherwise the axis would show empty negative space)
-  if all(v >= 0 for line in ax_quality.get_lines() for v in line.get_ydata() if np.isfinite(v)):
+  elif all(v >= 0 for line in ax_quality.get_lines() for v in line.get_ydata() if np.isfinite(v)):
     ax_quality.set_ylim(bottom=0)
 
   ax_quality.set_ylabel(VALUE_LABELS.get(problem, "Value"))
