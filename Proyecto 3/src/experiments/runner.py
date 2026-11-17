@@ -54,6 +54,8 @@ TIMEOUT_GRACE_SECONDS = 5
 
 _FORK = multiprocessing.get_context("fork")
 
+csv.field_size_limit(2**31 - 1)
+
 
 # CSV storage
 
