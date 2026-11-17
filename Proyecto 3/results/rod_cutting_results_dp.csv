@@ -1,0 +1,21 @@
+experiment,problem,instance,size,config_id,method,seed,status,value,time_seconds,peak_memory_kb,evaluations,generations,solution,message
+exp2,rod_cutting,scale_n10_s9010,10,-,dp,0,ok,28.0,5.544000009649608e-05,0,,,,
+exp2,rod_cutting,scale_n15_s9015,15,-,dp,0,ok,42.0,6.370400001287635e-05,0,,,,
+exp2,rod_cutting,scale_n20_s9020,20,-,dp,0,ok,60.0,7.601099991916271e-05,0,,,,
+exp2,rod_cutting,scale_n24_s9024,24,-,dp,0,ok,67.0,9.144399996330321e-05,0,,,,
+exp2,rod_cutting,scale_n26_s9026,26,-,dp,0,ok,78.0,9.41060000059224e-05,0,,,,
+exp2,rod_cutting,scale_n28_s9028,28,-,dp,0,ok,83.0,0.00010342799987483886,0,,,,
+exp2,rod_cutting,scale_n30_s9030,30,-,dp,0,ok,78.0,0.00011960000006183691,0,,,,
+exp2,rod_cutting,scale_n31_s9031,31,-,dp,0,ok,93.0,0.00012649899986172386,0,,,,
+exp2,rod_cutting,scale_n32_s9032,32,-,dp,0,ok,96.0,0.00013972800002193253,0,,,,
+exp2,rod_cutting,scale_n33_s9033,33,-,dp,0,ok,99.0,0.00013228300008449878,0,,,,
+exp2,rod_cutting,scale_n34_s9034,34,-,dp,0,ok,89.0,0.00013998000008541567,0,,,,
+exp2,rod_cutting,scale_n100_s9100,100,-,dp,0,ok,291.0,0.0010252439999476337,0,,,,
+exp2,rod_cutting,scale_n1000_s10000,1000,-,dp,0,ok,3000.0,0.1561163270000634,128,,,,
+exp2,rod_cutting,scale_n4000_s13000,4000,-,dp,0,ok,11997.0,2.5836900369999967,1024,,,,
+exp2,rod_cutting,scale_n16000_s25000,16000,-,dp,0,ok,47991.0,41.983698473000004,4224,,,,
+exp2,rod_cutting,scale_n32000_s41000,32000,-,dp,0,ok,96000.0,162.3775328260001,8576,,,,
+exp2,rod_cutting,scale_n64000_s73000,64000,-,dp,0,timeout,,600,,,,,no result after 600 s
+exp2,rod_cutting,scale_n90000_s99000,90000,-,dp,0,skipped,,,,,,,limit already reached at size 64000
+exp2,rod_cutting,scale_n128000_s137000,128000,-,dp,0,skipped,,,,,,,limit already reached at size 64000
+exp2,rod_cutting,scale_n181000_s190000,181000,-,dp,0,skipped,,,,,,,limit already reached at size 64000
